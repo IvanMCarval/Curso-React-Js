@@ -6,6 +6,7 @@ import firebase from '../../services/firebaseConnection';
 
 import Header from "../../components/Header";
 import Title from '../../components/Title';
+import Modal from "../../components/Modal/idenx";
 import {FiMessageSquare, FiPlus, FiSearch, FiEdit2} from 'react-icons/fi';
 
 import './dashboard.css';
@@ -18,6 +19,9 @@ export default function Dashboard(){
     const [loadingMore, setLoadingMore] = useState(false);
     const [isEmpty, setIsEmpty] = useState(false);
     const [lastDocs, setLastDocs] = useState();
+
+    const [showPostModal, setShowPostModal] = useState(false);
+    const [detail, setDetail] = useState();
 
     const {signOut} = useContext(AuthContext);
 
@@ -51,21 +55,23 @@ export default function Dashboard(){
         setLoadingMore(false);
     }
 
-    async function loadingChamados() {
-        await listRef.limit(5)
-        .get()
-        .then((snapshot) => {
-            updateState(snapshot);
-        })
-        .catch((error) => {
-            console.log(error);
-            setLoadingMore(false);
-        })
 
-        setLoading(false);
-    }
 
     useEffect(() => {
+
+        async function loadingChamados() {
+            await listRef.limit(5)
+            .get()
+            .then((snapshot) => {
+                updateState(snapshot);
+            })
+            .catch((error) => {
+                console.log(error);
+                setLoadingMore(false);
+            })
+    
+            setLoading(false);
+        }
 
         loadingChamados();
 
@@ -98,6 +104,11 @@ export default function Dashboard(){
         .then((snapshot) => {
             updateState(snapshot);
         })
+    }
+
+    function tooglePostModal(item) {
+        setShowPostModal(!showPostModal);//trocando de true pra false
+        setDetail(item);
     }
 
     return(
@@ -145,7 +156,7 @@ export default function Dashboard(){
                                             </td>
                                             <td data-label="Cadastrado">{item.createdFormated}</td>
                                             <td data-label="#">
-                                                <button className="action" style={{backgroundColor: '#3583f6'}}>
+                                                <button className="action" style={{backgroundColor: '#3583f6'}} onClick={() => tooglePostModal(item)}>
                                                     <FiSearch color="#FFF" size={17}/>
                                                 </button>
                                                 <button className="action" style={{backgroundColor: '#F6a935'}}>
@@ -163,6 +174,14 @@ export default function Dashboard(){
                     </>
                 )}
             </div>
+
+            {showPostModal && (
+                <Modal
+                    conteudo={detail}
+                    close={tooglePostModal}
+                />
+            )}
+
         </div>
     )
 }
