@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import api from '../../services/api';
 
@@ -11,18 +11,43 @@ export default function Main() {
 
     const [loading, setLoading] = useState(false);
 
-    function handleInputChange(e) {
-        setNewRepo(e.target.value);
-    }
+    const [alert, setAlert] = useState(null);
+
+    //buscar
+    useEffect(() => {
+        const repoStorage = JSON.parse(localStorage.getItem('repos'));;
+        
+        if(repoStorage){
+            setRepositorios(repoStorage);
+        }
+
+    }, []);
+
+    //salvar
+    useEffect(() => {
+        localStorage.setItem('repos', JSON.stringify(repositorios));
+    }, [repositorios]);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
 
         async function submit() {
             setLoading(true);
+            setAlert(null);
 
             try {
+
+                if(newRepo === ''){
+                    throw new Error('Você precisa indicar um repositorio');
+                }
+
                 const response = await api.get(`repos/${newRepo}`);
+
+                const hasRepo = repositorios.find(repo => repo.name === newRepo);
+
+                if(hasRepo){
+                    throw new Error('Repositorio duplicado');
+                }
 
                 const data = {
                     name: response.data.full_name,
@@ -31,6 +56,7 @@ export default function Main() {
                 setRepositorios([...repositorios, data]);
                 setNewRepo('');
             } catch (error) {
+                setAlert(true);
                 console.log(error);
             } finally{
                 setLoading(false);
@@ -41,6 +67,11 @@ export default function Main() {
         submit();
         
     }, [newRepo, repositorios]);
+
+    function handleInputChange(e) {
+        setNewRepo(e.target.value);
+        setAlert(null);
+    }
 
     const handleDelete = useCallback((repo) => {
         const find = repositorios.filter(r => r.name !== repo);
@@ -54,7 +85,7 @@ export default function Main() {
                 Meus Repositorios
             </h1>
 
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleSubmit} error={alert}>
                 <input type='text' placeholder='Adicionar Repositorios' value={newRepo} onChange={handleInputChange}/>
 
                 <SubmitButton loading={loading ? 1 : 0}>
