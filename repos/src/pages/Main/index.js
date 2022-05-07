@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
 
@@ -15,12 +16,11 @@ export default function Main() {
 
     //buscar
     useEffect(() => {
-        const repoStorage = JSON.parse(localStorage.getItem('repos'));;
+        const repoStorage = localStorage.getItem('repos');
         
         if(repoStorage){
-            setRepositorios(repoStorage);
+            setRepositorios(JSON.parse(repoStorage));
         }
-
     }, []);
 
     //salvar
@@ -106,9 +106,9 @@ export default function Main() {
                             </DeleteButton>
                             {repo.name}
                         </span>
-                        <a href=''>
+                        <Link to={`/repositorio/${encodeURIComponent(repo.name)}`}>
                             <FaBars size={20}/>
-                        </a>
+                        </Link>
                     </li>
                 ))}
             </List>
