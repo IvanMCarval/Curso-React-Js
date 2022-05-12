@@ -1,11 +1,26 @@
-import {all, call, put, takeLatest} from 'redux-saga/effects';
-import {addReserveSuccess} from './actions';
+import {all, call, put, takeLatest, select} from 'redux-saga/effects';
+import {addReserveSuccess, updateAmount} from './actions';
 import api from '../../../Services/api';
 
 function* addToReserve({id}) {
-    const response = yield call(api.get, `trips/${id}`);
+    const tripExists = yield select(
+        state => state.reserve.find(trip => trip.id === id)
+    );
 
-    yield put(addReserveSuccess(response.data));
+    if(tripExists){
+        const amount = tripExists.amount + 1;
+
+        yield put(updateAmount(id, amount));
+    }else{
+        const response = yield call(api.get, `trips/${id}`);
+
+        const data = {
+            ...response.data,
+            amount: 1,
+        };
+
+        yield put(addReserveSuccess(data));
+    }
 }
 
 export default all([
